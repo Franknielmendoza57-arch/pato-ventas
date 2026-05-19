@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pato Ventas 💼 Pro Store</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0b0b10;
+  color:white;
+}
+
+/* HEADER */
+header{
+  padding:15px;
+  background:#111;
+  text-align:center;
+  font-weight:bold;
+  color:#00ffcc;
+}
+
+/* ADMIN BTN */
+#adminBtn{
+  position:fixed;
+  top:10px;
+  right:10px;
+  background:#ffcc00;
+  border:none;
+  padding:10px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+/* SEARCH */
+.search{
+  text-align:center;
+  padding:10px;
+}
+
+.search input{
+  width:70%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+}
+
+/* CATEGORIES */
+.categories{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  padding:10px;
+}
+
+.cat{
+  background:#222;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.cat:hover{
+  background:#00ffcc;
+  color:black;
+}
+
+/* PRODUCTS */
+.container{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.card{
+  width:250px;
+  margin:10px;
+  padding:15px;
+  background:rgba(255,255,255,0.07);
+  border-radius:12px;
+}
+
+.price{
+  color:#00ffcc;
+  font-weight:bold;
+}
+
+button{
+  border:none;
+  padding:8px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.buy{
+  background:#00ffcc;
+  font-weight:bold;
+  margin-top:5px;
+}
+
+/* CART */
+.cart{
+  position:fixed;
+  bottom:15px;
+  right:15px;
+  background:#00ffcc;
+  color:black;
+  padding:10px 15px;
+  border-radius:50px;
+  font-weight:bold;
+}
+
+/* ADMIN PANEL */
+#admin{
+  display:none;
+  position:fixed;
+  top:15%;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111;
+  border:2px solid #00ffcc;
+  padding:20px;
+  border-radius:10px;
+  width:300px;
+  z-index:1000;
+}
+
+input,select{
+  width:90%;
+  padding:10px;
+  margin:5px 0;
+  border-radius:8px;
+  border:none;
+}
+
+.adminBtn{
+  background:#ffcc00;
+  margin-top:5px;
+}
+</style>
+</head>
+
+<body>
+
+<header>💼 PATO VENTAS PRO STORE</header>
+
+<button id="adminBtn" onclick="admin()">ADMIN</button>
+
+<div class="search">
+<input id="search" onkeyup="render()" placeholder="Buscar productos...">
+</div>
+
+<div class="categories">
+<div class="cat" onclick="setCat('all')">Todo</div>
+<div class="cat" onclick="setCat('diamantes')">💎 Diamantes</div>
+<div class="cat" onclick="setCat('likes')">👍 Likes</div>
+<div class="cat" onclick="setCat('cuentas')">👤 Cuentas</div>
+</div>
+
+<div class="container" id="box"></div>
+
+<div class="cart" onclick="checkout()">
+🛒 $<span id="total">0</span>
+</div>
+
+<!-- ADMIN -->
+<div id="admin">
+<h3>🔐 ADMIN PANEL</h3>
+
+<input id="name" placeholder="Nombre">
+<input id="price" placeholder="Precio">
+<input id="desc" placeholder="Descripción">
+
+<select id="cat">
+<option value="diamantes">Diamantes</option>
+<option value="likes">Likes</option>
+<option value="cuentas">Cuentas</option>
+</select>
+
+<button class="adminBtn" onclick="add()">Agregar</button>
+<button onclick="closeAdmin()">Cerrar</button>
+</div>
+
+<script>
+
+let wa="525731227595";
+
+/* DATA */
+let data = JSON.parse(localStorage.getItem("patoGit")) || [
+{name:"💎 572 Diamantes",price:60,desc:"Entrega rápida",cat:"diamantes"},
+{name:"👍 100 Likes",price:25,desc:"Sube perfil",cat:"likes"},
+{name:"👤 Cuenta FF",price:300,desc:"Full skins",cat:"cuentas"}
+];
+
+let cart=[];
+let cat="all";
+
+/* ADMIN */
+function admin(){
+  let pass=prompt("Clave admin:");
+  if(pass==="1234"){
+    document.getElementById("admin").style.display="block";
+  }
+}
+
+function closeAdmin(){
+  document.getElementById("admin").style.display="none";
+}
+
+/* ADD PRODUCT */
+function add(){
+  let n=document.getElementById("name").value;
+  let p=parseInt(document.getElementById("price").value);
+  let d=document.getElementById("desc").value;
+  let c=document.getElementById("cat").value;
+
+  data.push({name:n,price:p,desc:d,cat:c});
+  render();
+  closeAdmin();
+}
+
+/* FILTER */
+function setCat(c){
+  cat=c;
+  render();
+}
+
+/* CART */
+function addCart(i){
+  cart.push(data[i]);
+  updateTotal();
+}
+
+function updateTotal(){
+  let t=cart.reduce((a,b)=>a+b.price,0);
+  document.getElementById("total").innerText=t;
+}
+
+/* CHECKOUT */
+function checkout(){
+  let msg="Hola quiero comprar:\n";
+  cart.forEach(p=>msg+=p.name+" - "+p.price+"\n");
+
+  window.location.href="https://wa.me/"+wa+"?text="+encodeURIComponent(msg);
+}
+
+/* RENDER */
+function render(){
+  let q=document.getElementById("search").value?.toLowerCase()||"";
+  let box=document.getElementById("box");
+  box.innerHTML="";
+
+  data
+  .filter(p=>cat==="all"||p.cat===cat)
+  .filter(p=>p.name.toLowerCase().includes(q))
+  .forEach((p,i)=>{
+    box.innerHTML+=`
+      <div class="card">
+        <h3>${p.name}</h3>
+        <p>${p.desc}</p>
+        <div class="price">$${p.price}</div>
+
+        <button class="buy" onclick="addCart(${i})">Agregar</button>
+      </div>
+    `;
+  });
+
+  localStorage.setItem("patoGit",JSON.stringify(data));
+}
+
+render();
+
+</script>
+
+</body>
+</html>
